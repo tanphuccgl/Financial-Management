@@ -2,6 +2,7 @@ package com.example.quanlytaichinh;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,8 +23,10 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -42,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
     EditText edTenDangNhap, edMatKhau;
     public int dem = 0;
 
-    String url = "http://10.0.3.2:8080/androidwebservice/getdatauser.php";
+    String url = "http://192.168.1.206/androidwebservice/getdatauser.php";
+
     String urlmk = "http://10.0.3.2:8080/androidwebservice/laymatkhau.php";
 
     @Override
@@ -182,42 +186,85 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, "Các mục đang trống", Toast.LENGTH_SHORT).show();
         } else {
 
-            JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                    new Response.Listener<JSONArray>() {
-                        @Override
-                        public void onResponse(JSONArray response) {
-                            for (int i = 0; i < response.length(); i++) {
-                                try {
-                                    JSONObject object = response.getJSONObject(i);
-//                                    Toast.makeText(MainActivity.this,object.getString("TenDangNhap"),Toast.LENGTH_LONG).show();
-                                    if (tdn.equals(object.getString("TenDangNhap")) && mk.equals(object.getString("MatKhau"))) {
-                                        dem = dem + 1;
-                                        Intent it = new Intent(MainActivity.this, ThongKeActivity.class);
-                                        String tdni = object.getString("TenDangNhap");
-                                        it.putExtra("TenDangNhap", tdni);
-                                        startActivity(it);
-                                        overridePendingTransition(R.anim.anim_enter,R.anim.anim_dira);
-                                    }
+// Tạo Uri.Builder để xây dựng URL với các tham số
+            url = url+"?TenDangNhap=" + tdn + "&MatKhau=" + mk;
 
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
+
+
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            // Xử lý dữ liệu JSON nhận được từ máy chủ
+                            try {
+
+                                JSONObject jsonObject = new JSONObject(response.toString());
+
+                                // Truy cập các thuộc tính trong đối tượng JSONObject
+                                String tendangnhap = jsonObject.getString("tendangnhap");
+                                String matkhau = jsonObject.getString("matkhau");
+
+                                // In ra các giá trị
+                                System.out.println("levi12: " + tendangnhap);
+                                System.out.println("levi13: " + matkhau);
+
+
+                                System. out. println("levi" +  response.toString());
+                                String user = response.getString("tendangnhap");
+                                String password = response.getString("matkhau");
+
+                                // Hiển thị dữ liệu
+                                Log.d("User", user);
+                                Log.d("Password", password);
+
+//                                    Toast.makeText(MainActivity.this,object.getString("TenDangNhap"),Toast.LENGTH_LONG).show();
+                                if (tdn.equals(user) && mk.equals(password)) {
+                                    dem = dem + 1;
+                                    Intent it = new Intent(MainActivity.this, ThongKeActivity.class);
+                                    String tdni = user;
+                                    it.putExtra("tendangnhap", tdni);
+                                    startActivity(it);
+                                    overridePendingTransition(R.anim.anim_enter,R.anim.anim_dira);
                                 }
 
+                            } catch (JSONException e) {
+                                System. out. println("levi" +  response.toString());
+                                e.printStackTrace();
                             }
                             if (dem == 0) {
                                 edMatKhau.setError("Sai Tên Dăng nhâp hoặc mật khẩu");
-                               //Toast.makeText(MainActivity.this, "Sai ten dang nhap hoac mat khau", Toast.LENGTH_LONG).show();
+                                //Toast.makeText(MainActivity.this, "Sai ten dang nhap hoac mat khau", Toast.LENGTH_LONG).show();
                             }
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_LONG).show();
-                }
-            }
 
-            );
-            requestQueue.add(jsonArrayRequest);
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            System. out. println("levi" +  error.toString());
+                            // Xử lý lỗi
+                            error.printStackTrace();
+                        }
+                    });
+
+
+//            jsonArrayRequest.setRetryPolicy(new RetryPolicy() {
+//                @Override
+//                public int getCurrentTimeout() {
+//                    return 5000;
+//                }
+//
+//                @Override
+//                public int getCurrentRetryCount() {
+//                    return 5000;
+//                }
+//
+//                @Override
+//                public void retry(VolleyError error) throws VolleyError {
+//
+//                }
+//            });
+            requestQueue.add(jsonObjectRequest);
         }
     }
 
