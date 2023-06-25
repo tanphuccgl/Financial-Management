@@ -1,7 +1,9 @@
 package com.example.quanlytaichinh.Fragment;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,6 +29,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.quanlytaichinh.R;
@@ -47,10 +50,10 @@ public class Fragment_Muc_Chi extends Fragment {
     ListView lvMucChi1;
     ArrayList<MucChi> arrayLoaiChi;
     MucChiAdapter adapter;
-    String urls = "http://10.0.3.2:8080/androidwebservice/getdataLoaiChi.php";
-    String urli = "http://10.0.3.2:8080/androidwebservice/insertLoaiChi.php";
-    String urld = "http://10.0.3.2:8080/androidwebservice/deleteLoaiChi.php";
-    String urlsua = "http://10.0.3.2:8080/androidwebservice/updateLoaiChi.php";
+    String urls = "http://192.168.1.206/androidwebservice/getdataLoaiChi.php";
+    String urli = "http://192.168.1.206/androidwebservice/insertLoaiChi.php";
+    String urld = "http://192.168.1.206/androidwebservice/deleteLoaiChi.php";
+    String urlsua = "http://192.168.1.206/androidwebservice/updateLoaiChi.php";
 
     public Fragment_Muc_Chi() {
     }
@@ -62,13 +65,18 @@ public class Fragment_Muc_Chi extends Fragment {
         FloatingActionButton ftb = (FloatingActionButton) view.findViewById(R.id.fabMucChi);
 
         Intent intent = getActivity().getIntent();
-        TenDangNhap = intent.getStringExtra("TenDangNhap");
+        Context context = getActivity();
+        SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        String myVariable = sharedPreferences.getString("myVariable", "");
+
+        TenDangNhap = myVariable;
 
         lvMucChi1 = (ListView) view.findViewById(R.id.lvMucChi);
         arrayLoaiChi = new ArrayList<>();
+        getloaichi(urls);
         adapter = new MucChiAdapter(getActivity(),R.layout.custom_lv_muc_chi,arrayLoaiChi);
         lvMucChi1.setAdapter(adapter);
-        getloaichi(urls);
+
         btReset=view.findViewById(R.id.btreset);
         btReset.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,9 +208,11 @@ public class Fragment_Muc_Chi extends Fragment {
 
     }
 
-    private void ThemLoaiChi(final String url){
+    private void ThemLoaiChi( String url){
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&TenLoaiChi=" + edTenLoaiChi.getText().toString();
+        System.out.println("url??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")){
@@ -237,16 +247,20 @@ public class Fragment_Muc_Chi extends Fragment {
 
     private void getloaichi(String url) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap ;
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject object = array.getJSONObject(i);
-                        arrayLoaiChi.add(new MucChi(object.getString("MaLoaiChi"),object.getString("TenLoaiChi")));
+                    for (int i = 0; i < response.length(); i++) {
+                        JSONObject object = response.getJSONObject(i);
+                        arrayLoaiChi.add(new MucChi(object.getString("maloaichi"),object.getString("tenloaichi")));
+
                     }
+
                     adapter.notifyDataSetChanged();
+
+
                 } catch (JSONException e) {
                     e.printStackTrace();
 
@@ -273,12 +287,14 @@ public class Fragment_Muc_Chi extends Fragment {
                 ;
 
 
-        requestQueue.add(stringRequest);
+        requestQueue.add(jsonArrayRequest);
     }
 
-    private void XoaLoaiChi(final String url, final String tenloaichi) {
+    private void XoaLoaiChi( String url, final String tenloaichi) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&TenLoaiChi=" + tenloaichi;
+        System.out.println("url123??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
@@ -311,9 +327,11 @@ public class Fragment_Muc_Chi extends Fragment {
         requestQueue.add(stringRequest);
     }
 
-    private void SuaLoaiChi(final String url,final String mlc,final  String tlcmoi){
+    private void SuaLoaiChi( String url,final String mlc,final  String tlcmoi){
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&MaLoaiChi=" + mlc+ "&TenLoaiChi=" + tlcmoi;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {

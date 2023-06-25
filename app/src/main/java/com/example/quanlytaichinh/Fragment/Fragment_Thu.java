@@ -295,12 +295,6 @@ public class Fragment_Thu extends Fragment {
                     }
                     thuadapter.notifyDataSetChanged();
 
-                    // Danh sách đối tượng đã được tạo
-                    for (Thu thu : arrayThu) {
-                        // Thực hiện các thao tác với đối tượng thu
-                        System.out.println("fsdaf " + thu.getTenloaithu());
-                    }
-
                 } catch (JSONException e) {
                     Log.d("Error quan ly thu", e.toString());
                     e.printStackTrace();
