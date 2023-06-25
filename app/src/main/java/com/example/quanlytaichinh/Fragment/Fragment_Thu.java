@@ -73,7 +73,7 @@ public class Fragment_Thu extends Fragment {
 
     String urls = "http://192.168.1.206/androidwebservice/getdataLoaiThu.php";
     String url = "http://192.168.1.206/androidwebservice/getdataThu.php";
-    String urli = "http://10.0.3.2:8080/androidwebservice/insertKhoanThu.php";
+    String urli = "http://192.168.1.206/androidwebservice/insertKhoanThu.php";
     String urld = "http://10.0.3.2:8080/androidwebservice/deleteKhoanThu.php";
     String urlsua = "http://10.0.3.2:8080/androidwebservice/updateKhoanThu.php";
     @Nullable
@@ -377,9 +377,12 @@ public class Fragment_Thu extends Fragment {
 
     }
 
-    private void themkhoanthu(final String url) {
+    private void themkhoanthu( String url) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        String ngaythu = edNgayThu.getText().toString();
+        url = url+"?TenDangNhap=" + TenDangNhap + "&TenLoaiThu=" + tenloai+"&SoTienThu=" + edSoTienThu.getText().toString()+"&NgayThu=" + ngaythu;
+        System.out.println("url??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
