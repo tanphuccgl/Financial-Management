@@ -1,7 +1,9 @@
 package com.example.quanlytaichinh.Fragment;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,8 +29,10 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.quanlytaichinh.QLThuActivity;
 import com.example.quanlytaichinh.R;
 
 import org.json.JSONArray;
@@ -48,10 +52,10 @@ public class Fragment_Muc_Thu extends Fragment {
     ListView lvMucThu1;
     ArrayList<MucThu> arrayLoaiThu;
     MucThuAdapter adapter;
-    String urls = "http://10.0.3.2:8080/androidwebservice/getdataLoaiThu.php";
-    String url = "http://10.0.3.2:8080/androidwebservice/insertLoaiThu.php";
-    String urld = "http://10.0.3.2:8080/androidwebservice/deleteLoaiThu.php";
-    String urlsua = "http://10.0.3.2:8080/androidwebservice/updateLoaiThu.php";
+    String urls = "http://192.168.1.206/androidwebservice/getdataLoaiThu.php";
+    String url = "http://192.168.1.206/androidwebservice/insertLoaiThu.php";
+    String urld = "http://192.168.1.206/androidwebservice/deleteLoaiThu.php";
+    String urlsua = "http://192.168.1.206/androidwebservice/updateLoaiThu.php";
 
 
     public Fragment_Muc_Thu() {
@@ -64,13 +68,18 @@ public class Fragment_Muc_Thu extends Fragment {
         FloatingActionButton ftb = (FloatingActionButton) view.findViewById(R.id.fabMucThu);
 
         Intent intent = getActivity().getIntent();
-        TenDangNhap = intent.getStringExtra("TenDangNhap");
+        Context context = getActivity();
+        SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        String myVariable = sharedPreferences.getString("myVariable", "");
+
+        TenDangNhap = myVariable;
 
         lvMucThu1 = (ListView) view.findViewById(R.id.lvMucThu);
         arrayLoaiThu = new ArrayList<>();
+        getloaithu(urls);
         adapter = new MucThuAdapter(getActivity(), R.layout.custom_lv_muc_thu, arrayLoaiThu);
         lvMucThu1.setAdapter(adapter);
-        getloaithu(urls);
+
 
         btReset=view.findViewById(R.id.btreset);
         btReset.setOnClickListener(new View.OnClickListener() {
@@ -208,9 +217,11 @@ public class Fragment_Muc_Thu extends Fragment {
 
     }
 
-    private void SuaLoaithu(final String url,final String mlt,final  String tltmoi){
+    private void SuaLoaithu( String url,final String mlt,final  String tltmoi){
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+
+        url = url+"?TenDangNhap=" + TenDangNhap + "&MaLoaiThu=" + mlt+ "&TenLoaiThu=" + tltmoi;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
@@ -244,9 +255,11 @@ public class Fragment_Muc_Thu extends Fragment {
         requestQueue.add(stringRequest);
     }
 
-    private void ThemLoaiThu(final String url) {
+    private void ThemLoaiThu( String url) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&TenLoaiThu=" + edTenLoaiThu.getText().toString();
+        System.out.println("url??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
@@ -282,29 +295,42 @@ public class Fragment_Muc_Thu extends Fragment {
 
     private void getloaithu(String url) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap ;
+
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-//                    Toast.makeText(getActivity(),array.toString(),Toast.LENGTH_LONG).show();
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject object = array.getJSONObject(i);
-                        arrayLoaiThu.add(new MucThu(object.getString("MaLoaiThu"),object.getString("TenLoaiThu")));
+
+                    for (int i = 0; i < response.length(); i++) {
+                        JSONObject object = response.getJSONObject(i);
+                        arrayLoaiThu.add(new MucThu(object.getString("maloaithu"),object.getString("tenloaithu")));
+
                     }
+                    System.out.println("urrl"+arrayLoaiThu.toString());
+
                     adapter.notifyDataSetChanged();
+
+
+
                 } catch (JSONException e) {
+                    Log.d("Error quan ly thu", e.toString());
                     e.printStackTrace();
                 }
-
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                Log.d("Error quan ly thu api", error.toString());
+                error.printStackTrace();
             }
 
-        }) {
+
+        }
+
+
+        ) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
@@ -313,12 +339,17 @@ public class Fragment_Muc_Thu extends Fragment {
                 return params;
             }
         };
-        requestQueue.add(stringRequest);
+
+        requestQueue.add(jsonArrayRequest);
+
+
     }
 
-    private void XoaLoaiThu(final String url, final String tenloaithu) {
+    private void XoaLoaiThu( String url, final String tenloaithu) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&TenLoaiThu=" + tenloaithu;
+        System.out.println("url123??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
