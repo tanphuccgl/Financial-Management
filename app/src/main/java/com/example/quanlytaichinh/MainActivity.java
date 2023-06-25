@@ -1,5 +1,6 @@
 package com.example.quanlytaichinh;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -225,6 +226,10 @@ public class MainActivity extends AppCompatActivity {
                                     it.putExtra("tendangnhap", tdni);
                                     startActivity(it);
                                     overridePendingTransition(R.anim.anim_enter,R.anim.anim_dira);
+                                    SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putString("myVariable", user);
+                                    editor.apply();
                                 }
 
                             } catch (JSONException e) {
