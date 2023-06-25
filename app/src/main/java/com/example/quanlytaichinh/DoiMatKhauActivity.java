@@ -1,6 +1,10 @@
 package com.example.quanlytaichinh;
 
+import static android.app.PendingIntent.getActivity;
+
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,12 +35,16 @@ public class DoiMatKhauActivity extends AppCompatActivity {
     Button btDoiMatKhau;
     EditText edTenDangNhap,edMaKhauCu,edMatKhauMoi,edMKNhapLai;
     String tdn,mkcu,mkmoi,mknhaplai;
-    String url ="http://10.0.3.2:8080/androidwebservice/updateMatKhau.php";
+    String url ="http://192.168.1.206/androidwebservice/updateMatKhau.php";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doi_mat_khau);
+
         AnhXa();
+
+
+
 
         ibexit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,9 +86,11 @@ public class DoiMatKhauActivity extends AppCompatActivity {
         edMatKhauMoi=findViewById(R.id.edMatKhauMoi);
         edMKNhapLai=findViewById(R.id.edMKNhapLai);
     }
-    private void doimatkhau(final String url){
+    private void doimatkhau( String url){
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + tdn + "&MatKhauCu=" + mkcu+ "&MatKhauMoi=" + mkmoi;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")){

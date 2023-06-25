@@ -31,7 +31,7 @@ public class DangKyActivity extends AppCompatActivity {
     //    RadioButton rbNam,rbNu;
     Button btDangKy,btHuy;
 
-    String url = "http://10.0.3.2:8080/androidwebservice/insertUser.php";
+    String url = "http://192.168.1.206/androidwebservice/insertUser.php";
 
 
     @Override
@@ -50,7 +50,7 @@ public class DangKyActivity extends AppCompatActivity {
                 if(tdn.isEmpty()||mk.isEmpty()||ht.isEmpty()||dc.isEmpty()){
                     Toast.makeText(DangKyActivity.this,"Khong duoc bo trong",Toast.LENGTH_LONG).show();
                 }else{
-                    ThemUser(url);
+                    ThemUser(url,tdn,mk,ht,dc);
                 }
 
             }
@@ -64,9 +64,10 @@ public class DangKyActivity extends AppCompatActivity {
         });
 
     }
-    private void ThemUser(final String url){
+    private void ThemUser( String url,String tdn,String mk,String ht,String dc){
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + tdn +"&MatKhau" +mk + "&HoTen=" + ht+ "&DiaChi=" + dc;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")){

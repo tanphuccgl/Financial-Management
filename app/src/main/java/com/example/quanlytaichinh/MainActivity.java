@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     String url = "http://192.168.1.206/androidwebservice/getdatauser.php";
 
-    String urlmk = "http://10.0.3.2:8080/androidwebservice/laymatkhau.php";
+    String urlmk = "http://192.168.1.206/androidwebservice/laymatkhau.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,24 +135,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void laymatkhau(final String url) {
+    private void laymatkhau( String url) {
         final String tdnl = edtdn.getText().toString().trim();
         final String ht = edht.getText().toString().trim();
         final String dc = edDiaChi.getText().toString().trim();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + tdnl + "&HoTen=" + ht+ "&DiaChi=" + dc;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                try {
-                    JSONArray array = new JSONArray(response);
-                    //  Toast.makeText(getActivity(),array.toString(),Toast.LENGTH_LONG).show();
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject object = array.getJSONObject(i);
-                        Toast.makeText(MainActivity.this, "Mật khẩu là : " + object.getString("MatKhau"), Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+
+
+                        Toast.makeText(MainActivity.this, "Mật khẩu là : " + response, Toast.LENGTH_LONG).show();
+
             }
         }, new Response.ErrorListener() {
             @Override
