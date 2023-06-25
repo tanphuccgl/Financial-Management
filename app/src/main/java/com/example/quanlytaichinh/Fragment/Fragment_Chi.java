@@ -1,8 +1,10 @@
 package com.example.quanlytaichinh.Fragment;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,8 +34,10 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.quanlytaichinh.QLThuActivity;
 import com.example.quanlytaichinh.QLThuChiActivity;
 import com.example.quanlytaichinh.R;
 
@@ -67,11 +71,11 @@ public class Fragment_Chi extends Fragment {
     ArrayAdapter loaithuchiadapter;
 
     String tenloai;
-    String url = "http://10.0.3.2:8080/androidwebservice/getdataChi.php";
-    String urls = "http://10.0.3.2:8080/androidwebservice/getdataLoaiChi.php";
-    String urli = "http://10.0.3.2:8080/androidwebservice/insertkhoanChi.php";
-    String urld = "http://10.0.3.2:8080/androidwebservice/deleteKhoanChi.php";
-    String urlsua = "http://10.0.3.2:8080/androidwebservice/updateKhoanChi.php";
+    String url = "http://192.168.1.206/androidwebservice/getdataChi.php";
+    String urls = "http://192.168.1.206/androidwebservice/getdataLoaiChi.php";
+    String urli = "http://192.168.1.206/androidwebservice/insertkhoanChi.php";
+    String urld = "http://192.168.1.206/androidwebservice/deleteKhoanChi.php";
+    String urlsua = "http://192.168.1.206/androidwebservice/updateKhoanChi.php";
 
 
     public Fragment_Chi() {
@@ -81,15 +85,19 @@ public class Fragment_Chi extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Intent intent = getActivity().getIntent();
-        TenDangNhap = intent.getStringExtra("TenDangNhap");
-        //Toast.makeText(getActivity(),"Ten dang nhap :"+TenDangNhap,Toast.LENGTH_LONG).show();
+        Context context = getActivity();
 
+        SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        String myVariable = sharedPreferences.getString("myVariable", "");
+
+        TenDangNhap = myVariable;
         View view = inflater.inflate(R.layout.fragment_chi, container, false);
         lvChi = (ListView) view.findViewById(R.id.lvChi);
         arrayChi = new ArrayList<>();
+        getchi(url);
         chiadapter = new ChiAdapter(getActivity(), R.layout.custom_lv_chi, arrayChi);
         lvChi.setAdapter(chiadapter);
-        getchi(url);
+
 
         btReset=view.findViewById(R.id.btreset);
         btReset.setOnClickListener(new View.OnClickListener() {
@@ -276,21 +284,24 @@ public class Fragment_Chi extends Fragment {
 
     private void getchi(String url) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap ;
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-//                    Toast.makeText(getActivity(),array.toString(),Toast.LENGTH_LONG).show();
-                    for (int i = 0; i < array.length(); i++) {
+                    for (int i = 0; i < response.length(); i++) {
+                        JSONObject jsonObject = response.getJSONObject(i);
+                        int makhoanthu = jsonObject.getInt("makhoanchi");
+                        String tenloaithu = jsonObject.getString("tenloaichi");
+                        int sotienthu = jsonObject.getInt("sotienchi");
+                        String ngaythu = jsonObject.getString("ngaychi");
 
-                        JSONObject object = array.getJSONObject(i);
-                        arrayChi.add(new Chi(object.getInt("MaKhoanChi"),
-                                object.getString("TenLoaiChi"),
-                                object.getInt("SoTienChi"),
-                                object.getString("NgayChi")));
+                        Chi chi = new Chi(makhoanthu, tenloaithu, sotienthu, ngaythu);
+                        arrayChi.add(chi);
                     }
                     chiadapter.notifyDataSetChanged();
+
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -311,27 +322,30 @@ public class Fragment_Chi extends Fragment {
             }
         };
 
-        requestQueue.add(stringRequest);
+        requestQueue.add(jsonArrayRequest);
     }
 
     private void getloaichi(String url) {
+
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+          url = url+"?TenDangNhap=" + TenDangNhap ;
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-                    if (array.length()<1){
+                    if (response.length() < 1) {
                         showToast("Vui lòng nhập loại chi!",R.drawable.warning);
                         Intent i =new Intent(getActivity(),QLThuChiActivity.class);
                         i.putExtra("TenDangNhap",TenDangNhap);
                         startActivity(i);
-                    }else{
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject object = array.getJSONObject(i);
-                            loaithuchi.add(object.getString("TenLoaiChi"));
+                    } else {
+//                        Toast.makeText(getActivity(), array.toString(), Toast.LENGTH_LONG).show();
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject object = response.getJSONObject(i);
+                            loaithuchi.add(object.getString("tenloaichi"));
                         }
                     }
+
                     loaithuchiadapter.notifyDataSetChanged();
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -352,12 +366,15 @@ public class Fragment_Chi extends Fragment {
             }
         };
 
-        requestQueue.add(stringRequest);
+        requestQueue.add(jsonArrayRequest);
     }
 
-    private void themkhoanchi(final String url) {
+    private void themkhoanchi( String url) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        String ngaychi = edNgayChi.getText().toString();
+        url = url+"?TenDangNhap=" + TenDangNhap + "&TenLoaiChi=" + tenloai+"&SoTienChi=" + edSoTienChi.getText().toString()+"&NgayChi=" + ngaychi;
+        System.out.println("url??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
@@ -393,9 +410,11 @@ public class Fragment_Chi extends Fragment {
         requestQueue.add(stringRequest);
     }
 
-    private void xoachi(final String url, final int ma) {
+    private void xoachi( String url, final int ma) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&MaKhoanChi=" + ma;
+        System.out.println("url123??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
@@ -497,9 +516,12 @@ public class Fragment_Chi extends Fragment {
 
     }
 
-    private void suakhoanchi(final String url, final int mkc) {
+    private void suakhoanchi( String url, final int mkc) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        String ngaythu = edNgayChi.getText().toString();
+        url = url+"?TenDangNhap=" + TenDangNhap + "&MaKhoanChi=" + mkc+ "&TenLoaiChi=" + tenloai+"&SoTienChi=" + edSoTienChi.getText().toString()+"&NgayThu=" + ngaythu;
+        System.out.println("ur21l??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
