@@ -323,34 +323,46 @@ public class Fragment_Thu extends Fragment {
 
     private void getloaithu(String url) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap ;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-                    if (array.length() < 1) {
+
+                    if (response.length() < 1) {
                         showToast("Vui lòng nhập loại thu!", R.drawable.warning);
                         Intent i = new Intent(getActivity(), QLThuActivity.class);
                         i.putExtra("TenDangNhap", TenDangNhap);
                         startActivity(i);
                     } else {
 //                        Toast.makeText(getActivity(), array.toString(), Toast.LENGTH_LONG).show();
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject object = array.getJSONObject(i);
-                            loaithu.add(object.getString("TenLoaiThu"));
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject object = response.getJSONObject(i);
+                            loaithu.add(object.getString("tenloaithu"));
                         }
                     }
                     loaithudapter.notifyDataSetChanged();
+
+
+
                 } catch (JSONException e) {
+                    Log.d("Error quan ly thu", e.toString());
                     e.printStackTrace();
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Lỗi kết nối ", Toast.LENGTH_SHORT).show();
+                Log.d("Error quan ly thu api", error.toString());
+                error.printStackTrace();
             }
-        }) {
+
+
+        }
+
+
+        ) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
@@ -360,7 +372,9 @@ public class Fragment_Thu extends Fragment {
             }
         };
 
-        requestQueue.add(stringRequest);
+        requestQueue.add(jsonArrayRequest);
+
+
     }
 
     private void themkhoanthu(final String url) {
