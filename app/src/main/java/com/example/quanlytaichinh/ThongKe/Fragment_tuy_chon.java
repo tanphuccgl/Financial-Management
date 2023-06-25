@@ -1,7 +1,9 @@
 package com.example.quanlytaichinh.ThongKe;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.icu.text.DateFormat;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,6 +26,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.quanlytaichinh.ChartActivity;
@@ -42,8 +45,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Fragment_tuy_chon extends Fragment {
-    String url="http://10.0.3.2:8080/androidwebservice/getdataNgayChiTuyChon.php";
-    String urls ="http://10.0.3.2:8080/androidwebservice/getdataNgayThuTuyChon.php";
+    String url="http://192.168.1.206/androidwebservice/getdataNgayChiTuyChon.php";
+    String urls ="http://192.168.1.206/androidwebservice/getdataNgayThuTuyChon.php";
     public String TenDangNhap;
     private TextView tvTongChi,tvTongThu;
     public EditText edNgaybd,edNgaykt;
@@ -61,10 +64,11 @@ public class Fragment_tuy_chon extends Fragment {
         View view= inflater.inflate(R.layout.fragment_tuy_chon,null);
 
         final Intent intent = getActivity().getIntent();
-        TenDangNhap = intent.getStringExtra("TenDangNhap");
-        //Toast.makeText(getActivity(),"Ten dang nhap :"+TenDangNhap,Toast.LENGTH_LONG).show();
-//        Log.e("AAAAAA", TenDangNhap);
+        Context context = getActivity();
+        SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        String myVariable = sharedPreferences.getString("myVariable", "");
 
+        TenDangNhap = myVariable;
         ListView lvChi = (ListView) view.findViewById(R.id.lv1);
         ListView lvThu = (ListView) view.findViewById(R.id.lv2);
         final EditText edNgaybd = (EditText) view.findViewById(R.id.edNgaybd);
@@ -170,16 +174,17 @@ public class Fragment_tuy_chon extends Fragment {
 
     private void getchi(String url,final String ngaybd,final  String ngaykt) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&Ngaybd=" + ngaybd+ "&Ngaykt=" + ngaykt;
+
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-//                    Toast.makeText(getActivity(),array.toString(),Toast.LENGTH_LONG).show();
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject object = array.getJSONObject(i);
-                        tongchi=tongchi+object.getInt("SoTienChi");
-                        arrayChi.add(new ttChi(object.getString("TenLoaiChi"), object.getInt("SoTienChi")));
+                    for (int i = 0; i < response.length(); i++) {
+                        JSONObject object = response.getJSONObject(i);
+                        tongchi=tongchi+object.getInt("sotienchi");
+                        arrayChi.add(new ttChi(object.getString("tenloaichi"), object.getInt("sotienchi")));
                     }
                     tvTongChi.setText("Tổng Chi : "+String.valueOf(tongchi)+" VND");
                     chiadapter.notifyDataSetChanged();
@@ -204,21 +209,21 @@ public class Fragment_tuy_chon extends Fragment {
             }
         };
 
-        requestQueue.add(stringRequest);
+        requestQueue.add(jsonArrayRequest);
     }
 
     private void getthu(String url,final String ngaybd,final  String ngaykt) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap + "&Ngaybd=" + ngaybd+ "&Ngaykt=" + ngaykt;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-//                    Toast.makeText(getActivity(),array.toString(),Toast.LENGTH_LONG).show();
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject object = array.getJSONObject(i);
-                        tongthu=tongthu+object.getInt("SoTienThu");
-                        arrayThu.add(new ttThu(object.getString("TenLoaiThu"), object.getInt("SoTienThu")));
+                    for (int i = 0; i < response.length(); i++) {
+                        JSONObject object = response.getJSONObject(i);
+                        tongthu=tongthu+object.getInt("sotienthu");
+                        arrayThu.add(new ttThu(object.getString("tenloaithu"), object.getInt("sotienthu")));
                     }
                     tvTongThu.setText("Tổng thu : "+String.valueOf(tongthu)+" VND");
                     chiadapter.notifyDataSetChanged();
@@ -243,7 +248,7 @@ public class Fragment_tuy_chon extends Fragment {
             }
         };
 
-        requestQueue.add(stringRequest);
+        requestQueue.add(jsonArrayRequest);
     }
 
     public  void  showToast(String show,int src){
