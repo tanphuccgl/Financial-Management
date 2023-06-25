@@ -66,7 +66,7 @@ public class DangKyActivity extends AppCompatActivity {
     }
     private void ThemUser( String url,String tdn,String mk,String ht,String dc){
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        url = url+"?TenDangNhap=" + tdn +"&MatKhau" +mk + "&HoTen=" + ht+ "&DiaChi=" + dc;
+        url = url+"?TenDangNhap=" + tdn +"&MatKhau=" +mk + "&HoTen=" + ht+ "&DiaChi=" + dc;
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {

@@ -310,7 +310,6 @@ public class Fragment_Chi extends Fragment {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Loi ket noi", Toast.LENGTH_SHORT).show();
             }
         }) {
             @Override
@@ -355,7 +354,6 @@ public class Fragment_Chi extends Fragment {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Loi ket noi", Toast.LENGTH_SHORT).show();
             }
         }) {
             @Override

@@ -110,7 +110,6 @@ public class Fragment_nam_nay extends Fragment {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Loi ket noi", Toast.LENGTH_SHORT).show();
 
             }
 
@@ -150,7 +149,6 @@ public class Fragment_nam_nay extends Fragment {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Loi ket noi", Toast.LENGTH_SHORT).show();
 
             }
         }) {
