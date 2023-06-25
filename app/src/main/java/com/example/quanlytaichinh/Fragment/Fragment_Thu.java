@@ -1,8 +1,10 @@
 package com.example.quanlytaichinh.Fragment;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,16 +28,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import android.content.SharedPreferences;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.quanlytaichinh.MainActivity;
 import com.example.quanlytaichinh.QLThuActivity;
 import com.example.quanlytaichinh.QLThuChiActivity;
 import com.example.quanlytaichinh.R;
+import com.example.quanlytaichinh.ThongKeActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,29 +71,30 @@ public class Fragment_Thu extends Fragment {
 
     String tenloai;
 
-    String urls = "http://10.0.3.2:8080/androidwebservice/getdataLoaiThu.php";
-    String url = "http://10.0.3.2:8080/androidwebservice/getdataThu.php";
+    String urls = "http://192.168.1.206/androidwebservice/getdataLoaiThu.php";
+    String url = "http://192.168.1.206/androidwebservice/getdataThu.php";
     String urli = "http://10.0.3.2:8080/androidwebservice/insertKhoanThu.php";
     String urld = "http://10.0.3.2:8080/androidwebservice/deleteKhoanThu.php";
     String urlsua = "http://10.0.3.2:8080/androidwebservice/updateKhoanThu.php";
-
-    public Fragment_Thu() {
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_thu, container, false);
         lvThu = (ListView) view.findViewById(R.id.lvThu);
-
         Intent intent = getActivity().getIntent();
-        TenDangNhap = intent.getStringExtra("TenDangNhap");
-        // Toast.makeText(getActivity(), TenDangNhap, Toast.LENGTH_SHORT).show();
+        Context context = getActivity();
 
+        SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        String myVariable = sharedPreferences.getString("myVariable", "");
+
+        TenDangNhap = myVariable;
+        // Toast.makeText(getActivity(), TenDangNhap, Toast.LENGTH_SHORT).show();
+            System.out.println("fads"+TenDangNhap);
         arrayThu = new ArrayList<>();
+        getthu(url);
         thuadapter = new ThuAdapter(getActivity(), R.layout.custom_lv_thu, arrayThu);
         lvThu.setAdapter(thuadapter);
-        getthu(url);
+
 
         btreset = view.findViewById(R.id.btreset);
         btreset.setOnClickListener(new View.OnClickListener() {
@@ -270,42 +278,48 @@ public class Fragment_Thu extends Fragment {
 
     private void getthu(String url) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        url = url+"?TenDangNhap=" + TenDangNhap ;
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONArray response) {
                 try {
-                    JSONArray array = new JSONArray(response);
-//                    Toast.makeText(getActivity(),array.toString(),Toast.LENGTH_LONG).show();
-                    for (int i = 0; i < array.length(); i++) {
+                    for (int i = 0; i < response.length(); i++) {
+                        JSONObject jsonObject = response.getJSONObject(i);
+                        int makhoanthu = jsonObject.getInt("makhoanthu");
+                        String tenloaithu = jsonObject.getString("tenloaithu");
+                        int sotienthu = jsonObject.getInt("sotienthu");
+                        String ngaythu = jsonObject.getString("ngaythu");
 
-                        JSONObject object = array.getJSONObject(i);
-                        arrayThu.add(new Thu(object.getInt("MaKhoanThu"),
-                                object.getString("TenLoaiThu"),
-                                object.getInt("SoTienThu"),
-                                object.getString("NgayThu")));
+                        Thu thu = new Thu(makhoanthu, tenloaithu, sotienthu, ngaythu);
+                        arrayThu.add(thu);
                     }
                     thuadapter.notifyDataSetChanged();
+
+                    // Danh sách đối tượng đã được tạo
+                    for (Thu thu : arrayThu) {
+                        // Thực hiện các thao tác với đối tượng thu
+                        System.out.println("fsdaf " + thu.getTenloaithu());
+                    }
+
                 } catch (JSONException e) {
+                    Log.d("Error quan ly thu", e.toString());
                     e.printStackTrace();
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Loi ket noi", Toast.LENGTH_SHORT).show();
-
+                Log.d("Error quan ly thu api", error.toString());
+                error.printStackTrace();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("TenDangNhap", TenDangNhap.trim());
+        });
+        requestQueue.add(jsonArrayRequest);
 
-                return params;
-            }
-        };
-        requestQueue.add(stringRequest);
     }
+
+
+
+
 
     private void getloaithu(String url) {
         final RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
