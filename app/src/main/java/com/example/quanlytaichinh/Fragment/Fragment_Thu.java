@@ -75,7 +75,7 @@ public class Fragment_Thu extends Fragment {
     String url = "http://192.168.1.206/androidwebservice/getdataThu.php";
     String urli = "http://192.168.1.206/androidwebservice/insertKhoanThu.php";
     String urld = "http://192.168.1.206/androidwebservice/deleteKhoanThu.php";
-    String urlsua = "http://10.0.3.2:8080/androidwebservice/updateKhoanThu.php";
+    String urlsua = "http://192.168.1.206/androidwebservice/updateKhoanThu.php";
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -526,9 +526,12 @@ public class Fragment_Thu extends Fragment {
 
     }
 
-    private void suakhoanthu(final String url, final int mkt) {
+    private void suakhoanthu( String url, final int mkt) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        String ngaythu = edNgayThu.getText().toString();
+        url = url+"?TenDangNhap=" + TenDangNhap + "&MaKhoanThu=" + mkt+ "&TenLoaiThu=" + tenloai+"&SoTienThu=" + edSoTienThu.getText().toString()+"&NgayThu=" + ngaythu;
+        System.out.println("ur21l??? " + url.toString());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if (response.trim().equals("true")) {
